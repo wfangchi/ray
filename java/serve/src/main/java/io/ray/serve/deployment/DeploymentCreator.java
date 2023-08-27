@@ -3,6 +3,7 @@ package io.ray.serve.deployment;
 import com.google.common.base.Preconditions;
 import io.ray.serve.config.AutoscalingConfig;
 import io.ray.serve.config.DeploymentConfig;
+import io.ray.serve.config.ReplicaConfig;
 import io.ray.serve.generated.DeploymentLanguage;
 import java.util.Map;
 
@@ -22,13 +23,6 @@ public class DeploymentCreator {
    * not provided, every deployment will be treated as a new version.
    */
   private String version;
-
-  /**
-   * Version of the existing deployment which is used as a precondition for the next deployment. If
-   * prev_version does not match with the existing deployment's version, the deployment will fail.
-   * If not provided, deployment procedure will not check the existing deployment's version.
-   */
-  private String prevVersion;
 
   /**
    * The number of processes to start up that will handle requests to this deployment. Defaults to
@@ -87,7 +81,7 @@ public class DeploymentCreator {
         numReplicas == null || numReplicas == 0 || autoscalingConfig == null,
         "Manually setting num_replicas is not allowed when autoscalingConfig is provided.");
 
-    DeploymentConfig config =
+    DeploymentConfig deploymentConfig =
         new DeploymentConfig()
             .setNumReplicas(numReplicas)
             .setMaxConcurrentQueries(maxConcurrentQueries)
@@ -99,15 +93,14 @@ public class DeploymentCreator {
             .setHealthCheckTimeoutS(healthCheckTimeoutS)
             .setDeploymentLanguage(language);
 
+    ReplicaConfig replicaConfig = new ReplicaConfig(deploymentDef, initArgs, rayActorOptions);
+
     return new Deployment(
-        deploymentDef,
-        name,
-        config,
+        name, // TODO use class name if not set.
+        deploymentConfig,
+        replicaConfig,
         version,
-        prevVersion,
-        initArgs,
-        routed ? routePrefix : "/" + name,
-        rayActorOptions);
+        routePrefix);
   }
 
   public String getDeploymentDef() {
@@ -134,15 +127,6 @@ public class DeploymentCreator {
 
   public DeploymentCreator setVersion(String version) {
     this.version = version;
-    return this;
-  }
-
-  public String getPrevVersion() {
-    return prevVersion;
-  }
-
-  public DeploymentCreator setPrevVersion(String prevVersion) {
-    this.prevVersion = prevVersion;
     return this;
   }
 

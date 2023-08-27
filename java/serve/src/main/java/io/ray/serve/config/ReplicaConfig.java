@@ -53,7 +53,7 @@ public class ReplicaConfig {
     if (!this.rayActorOptions.containsKey("num_cpus")) {
       this.rayActorOptions.put("num_cpus", 1.0);
     }
-    this.resources = resourcesFromRayOptions(rayActorOptions);
+    this.resources = resourcesFromRayOptions(this.rayActorOptions);
   }
 
   /**

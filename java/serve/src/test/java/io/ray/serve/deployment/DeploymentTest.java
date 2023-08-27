@@ -4,6 +4,7 @@ import io.ray.api.Ray;
 import io.ray.serve.BaseServeTest;
 import io.ray.serve.api.Serve;
 import io.ray.serve.config.AutoscalingConfig;
+import io.ray.serve.handle.RayServeHandle;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -123,5 +124,25 @@ public class DeploymentTest extends BaseServeTest {
     deployment.deploy(true);
     deployment.options().setUserConfig("_new").create().deploy(true);
     Assert.assertEquals(Ray.get(deployment.getHandle().method("call").remote("6")), "echo_6_new");
+  }
+
+  @Test
+  public void bindTest() {
+    // Deploy deployment.
+    String deploymentName = "exampleEcho";
+
+    Application deployment =
+        Serve.deployment()
+            .setName(deploymentName)
+            .setDeploymentDef(ExampleEchoDeployment.class.getName())
+            .setNumReplicas(1)
+            .setUserConfig("_test")
+            .setInitArgs(new Object[] {"echo_"})
+            .create()
+            .bind();
+
+    RayServeHandle handle = Serve.run(deployment).get();
+    Assert.assertEquals(Ray.get(handle.method("call").remote("6")), "echo_6_test");
+    Assert.assertTrue((boolean) Ray.get(handle.method("checkHealth").remote()));
   }
 }

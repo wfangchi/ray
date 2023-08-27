@@ -108,26 +108,18 @@ public class ServeControllerClient {
 
   public void deploy(
       String name,
-      String deploymentDef,
-      Object[] initArgs,
-      Map<String, Object> rayActorOptions,
+      ReplicaConfig replicaConfig,
       DeploymentConfig deploymentConfig,
       String version,
-      String prevVersion,
       String routePrefix,
       String url,
       Boolean blocking) {
+
     if (deploymentConfig == null) {
       deploymentConfig = new DeploymentConfig();
     }
-    if (rayActorOptions == null) {
-      rayActorOptions = new HashMap<>();
-    }
-    // TODO set runtime_env to rayActorOptions is not supported now.
-    ReplicaConfig replicaConfig = new ReplicaConfig(deploymentDef, initArgs, rayActorOptions);
 
     deploymentConfig.setVersion(version);
-    deploymentConfig.setPrevVersion(prevVersion);
 
     if (deploymentConfig.getAutoscalingConfig() != null
         && deploymentConfig.getMaxConcurrentQueries()
